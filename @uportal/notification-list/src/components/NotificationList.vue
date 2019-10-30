@@ -12,6 +12,7 @@
                 :key="index"
                 :notification="item"
                 @performaction="gotoAction($event)"
+                @read-action="readAction"
                 :highlight="highlight && item.id === highlight"
                 :color-map="colors"
             >
@@ -89,6 +90,28 @@ export default {
         handleWflError() {
             this.hasError = true;
             this.errorMessage = 'There was a problem retrieving notifications.';
+        },
+        async readAction(notification, action) {
+            if (action.redirect) {
+                return;
+            }
+
+            if (!this.debug) {
+                const response = await fetch(action.apiUrl, {
+                    credentials: 'same-origin',
+                    method: 'POST'
+                });
+
+                if (!response.ok || response.status !== 200) {
+                    throw new Error(response.statusText);
+                }
+            }
+
+            let targetNotification = this.notifications.find(function(n) {
+                return n.id === notification.id;
+            });
+
+            targetNotification.attributes.READ.splice(0, 1, true);
         },
         async getToken() {
             try {

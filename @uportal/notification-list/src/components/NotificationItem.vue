@@ -44,7 +44,29 @@
                 class="media-actions"
                 v-if="notification.availableActions && notification.availableActions.length"
             >
-                <dropdown id="_uid" no-caret dropleft toggle-class="btn-icon">
+                <button
+                    v-if="!isRead && hasReadAction"
+                    role="button"
+                    @click="readAction($event, notification, hasReadAction)"
+                    style="border: 0px; background-color: transparent;"
+                >
+                    <font-awesome-icon
+                        icon="envelope-open"
+                        size="1x"
+                        style="width: 16px; max-width: 16px; height: 16px; max-height: 16px"
+                        aria-hidden="true"
+                        fixed-width
+                    />
+                    <span class="sr-only">Mark notification as read</span>
+                </button>
+
+                <dropdown
+                    v-if="!isRead && !hasReadAction"
+                    id="_uid"
+                    no-caret
+                    dropleft
+                    toggle-class="btn-icon"
+                >
                     <template slot="button-content">
                         <font-awesome-icon icon="ellipsis-v" size="2x" fixed-width />
                     </template>
@@ -66,11 +88,13 @@ import DropdownItemButton from 'bootstrap-vue/es/components/dropdown/dropdown-it
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons/faEllipsisV';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons/faCommentAlt';
+import { faEnvelopeOpen } from '@fortawesome/free-solid-svg-icons/faEnvelopeOpen';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { format, isPast, distanceInWordsToNow } from 'date-fns';
 
 library.add(faEllipsisV);
 library.add(faCommentAlt);
+library.add(faEnvelopeOpen);
 
 export default {
     name: 'notification-item',
@@ -101,6 +125,10 @@ export default {
         openAction($event, action) {
             $event.preventDefault();
             this.$emit('performaction', action);
+        },
+        readAction($event, entry, action) {
+            $event.preventDefault();
+            this.$emit('read-action', entry, action);
         }
     },
     computed: {
@@ -145,6 +173,11 @@ export default {
             return this.notification.attributes.category
                 ? this.colorMap[this.notification.attributes.category[0]]
                 : '';
+        },
+        hasReadAction() {
+            return this.notification.availableActions.find(
+                action => action.clazz === 'org.jasig.portlet.notice.action.read.ReadAction'
+            );
         }
     },
     components: {
